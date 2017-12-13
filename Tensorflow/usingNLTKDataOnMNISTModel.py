@@ -1,10 +1,10 @@
-from usingMNISTDataSet import create_feature_sets_and_labels
+from nltkTensor import create_feature_sets_and_labels
 import tensorflow as tf
 #from tensorflow.examples.tutorials.mnist import input_data
 import pickle
 import numpy as np
 
-train_x,train_y,test_x,test_y = create_feature_sets_and_labels('/path/to/pos.txt','/path/to/neg.txt')
+train_x,train_y,test_x,test_y = create_feature_sets_and_labels('./dataset/pos.txt','./dataset/neg.txt')
 
 n_nodes_hl1 = 1500
 n_nodes_hl2 = 1500
@@ -52,11 +52,14 @@ def neural_network_model(data):
 
 def train_neural_network(x):
 	prediction = neural_network_model(x)
-	cost = tf.reduce_mean( tf.nn.softmax_cross_entropy_with_logits(prediction,y) )
+	cost = tf.reduce_mean( tf.nn.softmax_cross_entropy_with_logits(logits=prediction,labels=y) )
 	optimizer = tf.train.AdamOptimizer(learning_rate=0.001).minimize(cost)
 
 	with tf.Session() as sess:
 		sess.run(tf.initialize_all_variables())
+
+		# `sess.graph` provides access to the graph used in a `tf.Session`.
+		writer = tf.summary.FileWriter("./graph/", sess.graph)
 	    
 		for epoch in range(hm_epochs):
 			epoch_loss = 0
@@ -73,6 +76,8 @@ def train_neural_network(x):
 				i+=batch_size
 				
 			print('Epoch', epoch+1, 'completed out of',hm_epochs,'loss:',epoch_loss)
+
+		writer.close()	
 		correct = tf.equal(tf.argmax(prediction, 1), tf.argmax(y, 1))
 		accuracy = tf.reduce_mean(tf.cast(correct, 'float'))
 
